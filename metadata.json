@@ -1,0 +1,5 @@
+{
+  "name": "Lynchian Weather Dreams",
+  "description": "A surreal weather experience. Select a location to generate a David Lynch-style atmospheric video and narration using Gemini Veo and TTS.",
+  "requestFramePermissions": []
+}
