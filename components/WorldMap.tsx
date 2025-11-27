@@ -13,6 +13,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ onSelectLocation, disabled, selecte
   const mapRef = useRef<HTMLDivElement>(null);
   const [hoverCoords, setHoverCoords] = useState<Coordinates | null>(null);
   const [sunPos, setSunPos] = useState<{lat: number, lng: number} | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Calculate Sun Position for Day/Night Cycle
   useEffect(() => {
@@ -40,6 +41,12 @@ const WorldMap: React.FC<WorldMapProps> = ({ onSelectLocation, disabled, selecte
     calculateSunPosition();
     const interval = setInterval(calculateSunPosition, 60000 * 10); // Update every 10 mins
     return () => clearInterval(interval);
+  }, []);
+
+  // Update clock for city times
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -80,6 +87,22 @@ const WorldMap: React.FC<WorldMapProps> = ({ onSelectLocation, disabled, selecte
     left: `${((lng + 180) / 360) * 100}%`,
     top: `${((90 - lat) / 180) * 100}%`
   });
+
+  const getCityTime = (lng: number) => {
+    // Get UTC time in ms
+    const utc = currentTime.getTime() + (currentTime.getTimezoneOffset() * 60000);
+    // Rough approximation: 15 degrees = 1 hour
+    const offsetHours = lng / 15;
+    const cityTime = new Date(utc + (3600000 * offsetHours));
+    
+    return cityTime.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
 
   return (
     <div className={`relative w-full aspect-[2/1] bg-[#020202] overflow-hidden group border transition-colors duration-500 ${theme.containerClass.split(' ')[0]}`}>
@@ -131,9 +154,10 @@ const WorldMap: React.FC<WorldMapProps> = ({ onSelectLocation, disabled, selecte
           style={getPos(city.lat, city.lng)}
         >
           <div className={`w-2 h-2 rounded-full transition-transform hover:scale-150 ${theme.markerClass}`} />
-          <div className={`mt-1 text-[8px] opacity-70 group-hover/city:opacity-100 whitespace-nowrap px-1 rounded ${theme.fontClass}`}
+          <div className={`mt-1 text-[8px] opacity-70 group-hover/city:opacity-100 whitespace-nowrap px-1 rounded ${theme.fontClass} flex flex-col items-center`}
                style={{ backgroundColor: theme.backgroundColor, color: theme.primaryColor }}>
-            {city.name} {city.temperature}°
+            <span className="font-bold">{city.name} {city.temperature}°</span>
+            <span className="text-[6px] opacity-80 leading-none pb-0.5 tracking-tighter">{getCityTime(city.lng)}</span>
           </div>
         </div>
       ))}
