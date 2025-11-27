@@ -5,6 +5,14 @@ import { decode, decodeAudioData } from "./utils";
 
 const createClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+/**
+ * Generates a stylistic narrative based on weather data and the selected theme.
+ * Uses `gemini-2.5-flash` for fast text generation.
+ * 
+ * @param weather - The current weather conditions (temp, wind, code).
+ * @param theme - The active theme configuration containing system instructions.
+ * @returns A string containing the generated monologue.
+ */
 export const generateNarrative = async (weather: WeatherData, theme: ThemeConfig): Promise<string> => {
   const ai = createClient();
   const weatherDesc = WEATHER_CODES[weather.conditionCode] || "Unknown";
@@ -30,6 +38,15 @@ export const generateNarrative = async (weather: WeatherData, theme: ThemeConfig
   return response.text || "Static...";
 };
 
+/**
+ * Converts text to speech using the Gemini TTS model.
+ * Uses specific voice profiles defined in the ThemeConfig.
+ * 
+ * @param text - The text to speak.
+ * @param theme - The active theme (determines voiceName).
+ * @param audioCtx - The browser's AudioContext for decoding.
+ * @returns A decoded AudioBuffer ready for playback.
+ */
 export const generateSpeech = async (text: string, theme: ThemeConfig, audioCtx: AudioContext): Promise<AudioBuffer> => {
   const ai = createClient();
   
@@ -60,6 +77,15 @@ export const generateSpeech = async (text: string, theme: ThemeConfig, audioCtx:
   );
 };
 
+/**
+ * Generates a static atmospheric image representing the location and narrative.
+ * Uses `gemini-2.5-flash-image`.
+ * 
+ * @param narrative - The generated story (used to influence the scene).
+ * @param terrain - A crude description of the geography (e.g., "industrial wasteland").
+ * @param theme - The active theme (determines visual style prompt).
+ * @returns A Base64 data URL of the generated image.
+ */
 export const generateSceneryImage = async (narrative: string, terrain: string, theme: ThemeConfig): Promise<string | null> => {
   const ai = createClient();
   const prompt = theme.videoPromptTemplate(narrative.substring(0, 100), terrain); // Reuse prompt template
@@ -87,6 +113,11 @@ export const generateSceneryImage = async (narrative: string, terrain: string, t
   }
 };
 
+/**
+ * Generates a video using Veo.
+ * NOTE: Currently unused in the main flow to prioritize immediate playback speed,
+ * but kept for future "High Quality" mode implementation.
+ */
 export const generateVideo = async (narrative: string, terrain: string, theme: ThemeConfig): Promise<string | null> => {
   if (window.aistudio && window.aistudio.hasSelectedApiKey) {
       const hasKey = await window.aistudio.hasSelectedApiKey();
